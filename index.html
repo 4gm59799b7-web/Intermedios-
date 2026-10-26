@@ -28,6 +28,8 @@ button{min-height:44px;padding:0 14px;border-radius:8px;border:1px solid var(--l
 button.main{background:var(--acc);color:var(--acc-ink);border-color:var(--acc);font-weight:600}
 button.del{color:var(--bad)}
 button:disabled{opacity:.35;cursor:default}
+select{-webkit-appearance:none;appearance:none;padding-right:40px;text-overflow:ellipsis;background-repeat:no-repeat;background-position:right 14px center;background-size:14px 9px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%2393a1af' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")}
+#c-rec{min-height:56px;font-size:19px;font-weight:600;border-width:2px;border-color:var(--acc)}
 .ing{display:grid;gap:6px;padding:10px 0;border-bottom:1px solid var(--line)}
 :focus-visible{outline:3px solid var(--acc);outline-offset:2px}
 .seg{display:grid;grid-template-columns:1fr 1fr;gap:6px}
@@ -112,7 +114,7 @@ function renderCalc() {
     </select>`;
   if (!r) {
     calc.rid = '';
-    return `<h1>Calcular</h1><div class="card">${selector}</div><div class="card empty">Elige una preparación para calcular las cantidades.</div>`;
+    return `<h1>Calcular</h1><div class="card">${selector}<div class="empty">Elige una preparación para calcular las cantidades.</div></div>`;
   }
   const items = r.items;
   if (calc.ing >= items.length) calc.ing = 0;
