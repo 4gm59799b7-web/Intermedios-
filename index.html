@@ -166,7 +166,7 @@ function renderResultOnly() {
 function renderRec() {
   if (edit) return renderEdit();
   const rs = data.recipes;
-  return `<img class="logo" src="logo.png" alt="Logo" onerror="this.remove()"><h1>Recetas</h1>
+  return `<h1>Recetas</h1>
   <div class="card">
     ${rs.length ? rs.map(r => `<div class="list-item"><div class="t">${esc(r.name)}<small>${r.items.length} ingredientes · suma ${pct(sumOf(r))} %</small></div>
       <button onclick="startEdit('${r.id}')">Editar</button></div>`).join('') : '<div class="empty">No hay recetas todavía.</div>'}
@@ -266,8 +266,9 @@ function importData(f) {
 }
 
 /* ---------- Arranque ---------- */
+const LOGO = '<img class="logo" src="logo.png" alt="Logo" onerror="this.remove()">';
 function render() {
-  $('#app').innerHTML = view === 'calc' ? renderCalc() : renderRec();
+  $('#app').innerHTML = LOGO + (view === 'calc' ? renderCalc() : renderRec());
   updSum();
   $('#nav-calc').setAttribute('aria-current', view === 'calc' ? 'page' : 'false');
   $('#nav-rec').setAttribute('aria-current', view === 'rec' ? 'page' : 'false');
