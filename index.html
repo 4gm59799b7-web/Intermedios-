@@ -25,6 +25,8 @@ input,select{width:100%;padding:10px 12px;border:1px solid var(--line);border-ra
 button{min-height:44px;padding:0 14px;border-radius:8px;border:1px solid var(--line);background:var(--card);cursor:pointer}
 button.main{background:var(--acc);color:var(--acc-ink);border-color:var(--acc);font-weight:600}
 button.del{color:var(--bad)}
+button:disabled{opacity:.35;cursor:default}
+.ing{display:grid;gap:6px;padding:10px 0;border-bottom:1px solid var(--line)}
 :focus-visible{outline:3px solid var(--acc);outline-offset:2px}
 .seg{display:grid;grid-template-columns:1fr 1fr;gap:6px}
 .seg button[aria-pressed=true]{background:var(--acc);color:var(--acc-ink);border-color:var(--acc);font-weight:600}
@@ -178,6 +180,12 @@ function startEdit(id) {
   edit.isNew = !r; edit.err = '';
   render();
 }
+function moveIng(k, d) {
+  const j = k + d, a = edit.items;
+  if (j < 0 || j >= a.length) return;
+  [a[k], a[j]] = [a[j], a[k]];
+  render();
+}
 function updSum() {
   const el = $('#e-sum'); if (!el || !edit) return;
   const t = edit.items.reduce((a, i) => a + (num(i.p) || 0), 0);
@@ -190,10 +198,14 @@ function renderEdit() {
     <label for="e-name">Nombre de la preparación</label>
     <input id="e-name" value="${esc(e.name)}" oninput="edit.name=this.value">
     <label>Ingredientes (% sobre el total de la fabricación)</label>
-    ${e.items.map((i, k) => `<div class="row" style="margin-bottom:8px">
+    ${e.items.map((i, k) => `<div class="ing">
       <input aria-label="Ingrediente ${k + 1}" placeholder="Ingrediente" value="${esc(i.n)}" oninput="edit.items[${k}].n=this.value">
-      <input class="sm" aria-label="Porcentaje" inputmode="decimal" placeholder="%" value="${esc(i.p)}" oninput="edit.items[${k}].p=this.value;updSum()">
-      <button class="x del" aria-label="Quitar ingrediente" onclick="edit.items.splice(${k},1);render()">✕</button></div>`).join('')}
+      <div class="row">
+        <input aria-label="Porcentaje del ingrediente ${k + 1}" inputmode="decimal" placeholder="% del total" value="${esc(i.p)}" oninput="edit.items[${k}].p=this.value;updSum()">
+        <button class="x" aria-label="Subir ingrediente ${k + 1}" ${k === 0 ? 'disabled' : ''} onclick="moveIng(${k},-1)">▲</button>
+        <button class="x" aria-label="Bajar ingrediente ${k + 1}" ${k === e.items.length - 1 ? 'disabled' : ''} onclick="moveIng(${k},1)">▼</button>
+        <button class="x del" aria-label="Quitar ingrediente ${k + 1}" onclick="edit.items.splice(${k},1);render()">✕</button>
+      </div></div>`).join('')}
     <button onclick="edit.items.push({n:'',p:''});render()">Añadir ingrediente</button>
     <div id="e-sum" style="margin-top:10px;color:var(--mute);font-size:15px"></div>
     ${e.err ? `<div class="err" role="alert">${esc(e.err)}</div>` : ''}
