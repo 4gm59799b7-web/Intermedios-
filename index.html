@@ -18,6 +18,7 @@ html,body{margin:0}
 body{font:17px/1.4 -apple-system,"SF Pro Text",system-ui,sans-serif;background:var(--bg);color:var(--ink);padding:env(safe-area-inset-top) 0 calc(72px + env(safe-area-inset-bottom))}
 main{max-width:560px;margin:0 auto;padding:16px}
 h1{font-size:22px;margin:4px 0 16px}
+.logo{display:block;max-width:70%;max-height:90px;object-fit:contain;margin:0 auto 12px}
 .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:14px}
 label{display:block;font-size:14px;color:var(--mute);margin:10px 0 4px}
 input,select,button{font:inherit;color:inherit}
@@ -65,7 +66,7 @@ const num = v => { const n = parseFloat(String(v).replace(',', '.')); return isF
 
 let data = load();
 let view = 'calc';
-let calc = { rid: data.recipes[0]?.id || '', mode: 'total', ing: 0, amount: '', unit: 'kg' };
+let calc = { rid: '', mode: 'total', ing: 0, amount: '', unit: 'kg' };
 let edit = null; // receta en edición
 
 function migrate(d) {
@@ -102,8 +103,16 @@ function renderCalc() {
   if (!rs.length) {
     return `<h1>Calcular</h1><div class="card empty">Aún no hay recetas. Añade la primera en la pestaña Recetas.</div>`;
   }
-  const r = rs.find(x => x.id === calc.rid) || rs[0];
-  calc.rid = r.id;
+  const r = rs.find(x => x.id === calc.rid);
+  const selector = `<label for="c-rec">Preparación</label>
+    <select id="c-rec" onchange="calc.rid=this.value;calc.ing=0;render()">
+      <option value="" ${r ? '' : 'selected'}>Elige una preparación…</option>
+      ${rs.map(x => `<option value="${x.id}" ${r && x.id === r.id ? 'selected' : ''}>${esc(x.name)}</option>`).join('')}
+    </select>`;
+  if (!r) {
+    calc.rid = '';
+    return `<h1>Calcular</h1><div class="card">${selector}</div><div class="card empty">Elige una preparación para calcular las cantidades.</div>`;
+  }
   const items = r.items;
   if (calc.ing >= items.length) calc.ing = 0;
   const sumP = items.reduce((a, i) => a + i.p, 0);
@@ -125,10 +134,7 @@ function renderCalc() {
 
   return `<h1>Calcular</h1>
   <div class="card">
-    <label for="c-rec">Preparación</label>
-    <select id="c-rec" onchange="calc.rid=this.value;calc.ing=0;render()">
-      ${rs.map(x => `<option value="${x.id}" ${x.id === r.id ? 'selected' : ''}>${esc(x.name)}</option>`).join('')}
-    </select>
+    ${selector}
     <label>Calcular según</label>
     <div class="seg">
       <button aria-pressed="${calc.mode === 'total'}" onclick="calc.mode='total';render()">Total a fabricar</button>
@@ -159,7 +165,7 @@ function renderResultOnly() {
 function renderRec() {
   if (edit) return renderEdit();
   const rs = data.recipes;
-  return `<h1>Recetas</h1>
+  return `<img class="logo" src="logo.png" alt="Logo" onerror="this.remove()"><h1>Recetas</h1>
   <div class="card">
     ${rs.length ? rs.map(r => `<div class="list-item"><div class="t">${esc(r.name)}<small>${r.items.length} ingredientes · suma ${pct(sumOf(r))} %</small></div>
       <button onclick="startEdit('${r.id}')">Editar</button></div>`).join('') : '<div class="empty">No hay recetas todavía.</div>'}
@@ -226,12 +232,12 @@ function saveEdit() {
   const rec = { id: e.id || 'r' + Date.now(), name: e.name.trim(), items: items.map(i => ({ n: String(i.n).trim(), p: num(i.p) })) };
   const k = data.recipes.findIndex(x => x.id === rec.id);
   if (k >= 0) data.recipes[k] = rec; else data.recipes.push(rec);
-  save(); calc.rid = calc.rid || rec.id; go('rec');
+  save(); go('rec');
 }
 function delRec() {
   if (!confirm('¿Eliminar «' + edit.name + '»? No se puede deshacer.')) return;
   data.recipes = data.recipes.filter(x => x.id !== edit.id);
-  if (calc.rid === edit.id) calc.rid = data.recipes[0]?.id || '';
+  if (calc.rid === edit.id) calc.rid = '';
   save(); go('rec');
 }
 
@@ -252,7 +258,7 @@ function importData(f) {
       const d = JSON.parse(rd.result);
       if (!Array.isArray(d.recipes)) throw 0;
       if (!confirm('Esto sustituirá las ' + data.recipes.length + ' recetas actuales por las ' + d.recipes.length + ' del archivo. ¿Continuar?')) return;
-      data = migrate({ recipes: d.recipes }); calc.rid = data.recipes[0]?.id || ''; save(); render();
+      data = migrate({ recipes: d.recipes }); calc.rid = ''; save(); render();
     } catch (e) { alert('El archivo no es una copia válida de recetas.'); }
   };
   rd.readAsText(f);
